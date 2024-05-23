@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+// import {Users} from "../src/Users.sol";
+
 contract Listings {
     // Standard listing (stocked, single price)
     struct Listing {
@@ -11,6 +13,7 @@ contract Listings {
         uint40 stockRemaining;
 
         // if is not shippable, location is where it is sold from. if is, where shipping from
+        // can be 'N/A'
         bool isShippable;
         string location;
 
@@ -30,6 +33,8 @@ contract Listings {
 
     Listing[] private listings;
     AuctionListing[] private auctionListing;
+
+    mapping(uint256 => Listing) private idToListing;
 
     constructor() {
         Listing memory listing = Listing({
@@ -57,6 +62,40 @@ contract Listings {
         listings.push(listing);
 
         return true;
+    }
+
+    // takes in  a listing id and amount, and sets the amount on that listing to be the same
+    function restockListing(uint256 id, uint40 amount) public{
+        Listing memory listing = idToListing[id];
+        listing.stockRemaining = amount;
+    }
+
+    // takes in a listing id, and attempts to buy it with the current user balance
+    // returns true if successful, false otherwise (e.g. balance too low)
+    function buyListing(uint256 id) public returns (bool){
+        return false;
+    }
+
+    // takes in a listing id, and attempts to place a bid with the current user balance
+    // returns true if successful, false otherwise (e.g. balance too low)
+    function placeBid(uint256 id, uint256 amount) public returns (bool){
+        return false;
+
+    }
+
+    // takes in string regex and returns an array of listings with the same name
+    function getListings(string calldata regex) public returns(Listing[] memory){
+        Listing[] memory listings;
+
+        return listings;
+
+    }
+
+    // takes in string regex and returns an array of auction listings with the same name
+    function getAuctionListings(string calldata regex) public returns(AuctionListing[] memory){
+        AuctionListing[] memory listings;
+
+        return listings;
 
     }
 
