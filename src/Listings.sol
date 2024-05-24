@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 // import {Users} from "../src/Users.sol";
+// import {Wallet} from "../src/Wallet.sol";
 
 contract Listings {
     // Standard listing (stocked, single price)
@@ -11,12 +12,12 @@ contract Listings {
         address seller;
         string name;
         uint40 stockRemaining;
+        bool activeListing;
 
         // if is not shippable, location is where it is sold from. if is, where shipping from
         // can be 'N/A'
         bool isShippable;
         string location;
-
     }
 
     // Auction Listing (only one in stock)
@@ -43,6 +44,7 @@ contract Listings {
             seller: address(0),
             name: "UNTITLED LISTING",
             stockRemaining: 0,
+            activeListing: false,
             isShippable: false,
             location: "N/A"
         });
@@ -51,11 +53,12 @@ contract Listings {
 
     function createListing(uint256 amount, string calldata name, uint40 stockRemaining, bool isShippable, string calldata location) public returns (bool){
         Listing memory listing = Listing({
-            id: 0, // TODO: Randomize IDs
+            id: listings.length,
             price: amount,
             seller: msg.sender,
             name: name,
             stockRemaining: stockRemaining,
+            activeListing: true,
             isShippable: isShippable,
             location: location
         });
@@ -68,6 +71,9 @@ contract Listings {
     function restockListing(uint256 id, uint40 amount) public{
         Listing memory listing = idToListing[id];
         listing.stockRemaining = amount;
+        if(!listing.activeListing){
+            listing.activeListing = true;
+        }
     }
 
     // takes in a listing id, and attempts to buy it with the current user balance
@@ -88,7 +94,6 @@ contract Listings {
         Listing[] memory listings;
 
         return listings;
-
     }
 
     // takes in string regex and returns an array of auction listings with the same name
@@ -96,7 +101,18 @@ contract Listings {
         AuctionListing[] memory listings;
 
         return listings;
+    }
 
+    // checks if listing is active. sets active to false and returns true if active, else returns false
+    function setListingInactive(uint256 id) public returns (bool) {
+        Listing memory listing = idToListing[id];
+        if(listing.activeListing){
+            listing.activeListing = false;
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 
 }
