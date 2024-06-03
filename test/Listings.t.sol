@@ -5,7 +5,6 @@ import {Test, console} from "forge-std/Test.sol";
 import "forge-std/Vm.sol";
 import {Listings} from "../src/Listings.sol";
 
-
 contract TestBuyAccount {
     fallback() external payable{
     }
@@ -204,6 +203,4 @@ contract ListingsTest is Test {
         vm.stopPrank();
 
     }
-
-
 }

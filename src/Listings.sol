@@ -11,13 +11,13 @@ contract Listings {
         uint256 price;
         address seller;
         string name;
-        uint40 stockRemaining; // stockRemaining == 0 for inactive
+        uint40 stockRemaining;
+        bool activeListing;
 
         // if is not shippable, location is where it is sold from. if is, where shipping from
         // can be 'N/A'
         bool isShippable;
         string location;
-
     }
 
     // Auction Listing (only one in stock)
@@ -55,6 +55,7 @@ contract Listings {
             seller: msg.sender,
             name: name,
             stockRemaining: stockRemaining,
+            activeListing: true,
             isShippable: isShippable,
             location: location
         });
