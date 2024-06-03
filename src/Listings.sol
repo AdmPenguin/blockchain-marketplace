@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 // import {Users} from "../src/Users.sol";
+import { Wallet } from "../src/Wallet.sol";
 
 contract Listings {
     // Standard listing (stocked, single price)
@@ -73,13 +74,24 @@ contract Listings {
     // takes in a listing id, and attempts to buy it with the current user balance
     // returns true if successful, false otherwise (e.g. balance too low)
     function buyListing(uint256 id) public returns (bool){
+        Listing memory listingToBuy = idToListing[id];
+        if(listingToBuy.stockRemaining)
         return false;
     }
 
     // takes in a listing id, and attempts to place a bid with the current user balance
     // returns true if successful, false otherwise (e.g. balance too low)
     function placeBid(uint256 id, uint256 amount) public returns (bool){
-        return false;
+        AuctionListing memory listingToBid = idToListing[id];
+
+        if(amount > listingToBid.price){
+            listingToBid.price = amount;
+            listingToBid.currWinner = msg.sender;
+            return true;
+        }
+        else {
+            return false;
+        }
 
     }
 
