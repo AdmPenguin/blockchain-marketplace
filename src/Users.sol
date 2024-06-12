@@ -20,7 +20,7 @@ contract Users {
     // Mapping to store users by their address
     mapping(address => User) private users;
 
-    mapping(address => uint) public userBalances;
+    mapping(address => uint) private userBalances;
 
     // Event to log user registration
     event UserRegistered(address userAddress, string username);
@@ -87,13 +87,21 @@ contract Users {
     }
 
     function getNumberOfRatings(address userAddress) public view returns (uint256) {
-        require(bytes(users[userAddress].username).length != 0, "User not registered");
+        require(registeredUsers[userAddress] == true, "User not registered");
         return users[userAddress].numberOfRatings;
     }
 
     function checkBalance() public view  returns (uint256) {
         uint256 balance =  userBalances[msg.sender];
         return balance;
+    }
+
+    function transferMoney(uint amount, address _to) public returns(bool) {
+        require(userBalances[msg.sender] > amount, "not enough money in balance to transfer");
+        userBalances[msg.sender] -= amount;
+        userBalances[_to] += amount;
+
+        return true;
     }
 
 

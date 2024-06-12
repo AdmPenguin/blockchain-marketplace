@@ -54,11 +54,7 @@ contract UsersTest is Test {
     function test_getNumberOfRatings_when_no_ratings() public {
         vm.startPrank(testUser);
         usersContract.registerUser("user1", "password");
-        try usersContract.getNumberOfRatings(msg.sender){
-            assertEq(true, false);
-        } catch Error(string memory reason){
-            assertEq(reason, "User not registered");
-        }
+        assertEq(usersContract.getNumberOfRatings(testUser), 0);
         vm.stopPrank();
     }
 
@@ -68,9 +64,14 @@ contract UsersTest is Test {
         vm.stopPrank();
 
         vm.startPrank(rater);
+        usersContract.registerUser("rater", "password");
         usersContract.submitRating(testUser, 5);
         assertEq(usersContract.getNumberOfRatings(testUser), 1);
         assertEq(usersContract.getAverageRating(testUser), 500);
+        usersContract.submitRating(testUser, 3);
+        usersContract.submitRating(testUser, 3);
+        assertEq(usersContract.getNumberOfRatings(testUser), 3);
+        assertEq(usersContract.getAverageRating(testUser), 366);
         vm.stopPrank();
     }
 
