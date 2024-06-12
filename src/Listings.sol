@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// import {Users} from "../src/Users.sol";
-import { Wallet } from "../src/Wallet.sol";
+import {Users} from "../src/Users.sol";
+import { ItemManager } from "../src/Items.sol";
 
 contract Listings {
     // Standard listing (stocked, single price)
