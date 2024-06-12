@@ -17,6 +17,9 @@ contract Users {
     // used to check if users are registered
     mapping(address => bool) public registeredUsers;
 
+    mapping(address => bool) public loggedIn;
+
+
     // Mapping to store users by their address
     mapping(address => User) private users;
 
@@ -104,5 +107,5 @@ contract Users {
         return true;
     }
 
-
+    
 }

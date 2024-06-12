@@ -74,7 +74,7 @@ contract Listings {
 
     // takes in a listing id, and attempts to buy it with the current user balance
     // returns true if successful, false otherwise (e.g. balance too low)
-    function buyListing(uint256 listingId) public returns (bool){
+    function buyListing(uint256 listingId) external payable returns (bool){
         Listing memory listingToBuy = idToListing[listingId];
         require(listingToBuy.forSale, "Listing not for sale");
         require(userManager.transferMoney(listingToBuy.price, listingToBuy.seller), "Transaction failed");
@@ -83,37 +83,5 @@ contract Listings {
         itemManager.transferItem(listingToBuy.itemId, msg.sender);
         return true;     
     }
-
-    // takes in a listing id, and attempts to place a bid with the current user balance
-    // returns true if successful, false otherwise (e.g. balance too low)
-    // function placeBid(uint256 listingId, uint256 amount) public returns (bool){
-    //     AuctionListing memory listingToBid = idToListing[listingId];
-
-    //     if(amount > listingToBid.price){
-    //         listingToBid.price = amount;
-    //         listingToBid.currWinner = msg.sender;
-    //         return true;
-    //     }
-    //     else {
-    //         return false;
-    //     }
-
-    // }
-
-    // // takes in string regex and returns an array of listings with the same name
-    // function getListings(string calldata regex) public returns(Listing[] memory){
-    //     Listing[] memory listings;
-
-    //     return listings;
-
-    // }
-
-    // // takes in string regex and returns an array of auction listings with the same name
-    // function getAuctionListings(string calldata regex) public returns(AuctionListing[] memory){
-    //     AuctionListing[] memory listings;
-
-    //     return listings;
-
-    // }
 
 }
