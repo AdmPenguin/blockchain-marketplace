@@ -17,25 +17,19 @@ contract Users {
     // used to check if users are registered
     mapping(address => bool) public registeredUsers;
 
-    mapping(address => bool) public loggedIn;
-
 
     // Mapping to store users by their address
     mapping(address => User) private users;
-
-    mapping(address => uint) private userBalances;
 
     // Event to log user registration
     event UserRegistered(address userAddress, string username);
 
     // Function to register a new user
-    function registerUser(string memory _username, string memory _password) public {
-        require(registeredUsers[msg.sender] == false, "User already registered");
+    function registerUser(string memory _username, string memory _password, address caller) public {
+        require(registeredUsers[caller] == false, "User already registered");
 
         // Hash the password before storing it
         bytes32 _passwordHash = keccak256(abi.encodePacked(_password));
-
-        userBalances[msg.sender] = 0;
 
         // Store user information
         User memory user = User({
@@ -45,17 +39,17 @@ contract Users {
             numberOfRatings: 0
         });
 
-        users[msg.sender] = user;
+        users[caller] = user;
 
-        registeredUsers[msg.sender] = true;
+        registeredUsers[caller] = true;
 
-        emit UserRegistered(msg.sender, _username);
     }
 
 
     // Function to authenticate a user
-    function authenticateUser(string memory _username, string memory _password) public view returns (bool) {
-        User memory user = users[msg.sender];
+    function authenticateUser(string memory _username, string memory _password, address caller) public view returns (bool) {
+       require(registeredUsers[caller] == true, "User not registered");
+       User memory user = users[caller];
 
         // Check if the username matches and the password hash matches
         if (keccak256(abi.encodePacked(user.username)) == keccak256(abi.encodePacked(_username)) &&
@@ -66,22 +60,22 @@ contract Users {
     }
 
 
-    function getUsername() public view returns (string memory) {
-        require(registeredUsers[msg.sender] == true, "User not registered");
-        return users[msg.sender].username;
+    function getUsername(address caller) public view returns (string memory) {
+        require(registeredUsers[caller] == true, "User not registered");
+        return users[caller].username;
     }
     
-    function submitRating(address userAddress, uint256 rating) public {
+    function submitRating(address userAddress, uint256 rating, address caller) public {
         require(rating >= 0 && rating <= 5, "Rating must be between 0 and 5 stars");
-        require(registeredUsers[msg.sender] == true, "User not registered");
-        require(msg.sender != userAddress, "Users cannot rate themselves");
+        require(registeredUsers[caller] == true, "Function caller not registered");
+        require(caller != userAddress, "Users cannot rate themselves");
 
         users[userAddress].totalRating += rating * 100;
         users[userAddress].numberOfRatings++;
     }
 
-    function getAverageRating(address userAddress) public view returns (uint256) {
-        require(registeredUsers[msg.sender] == true, "User not registered");
+    function getAverageRating(address userAddress, address caller) public view returns (uint256) {
+        require(registeredUsers[caller] == true, "Function caller not registered");
         User memory user = users[userAddress];
         if (user.numberOfRatings == 0) {
             return 0; // No ratings yet, return 0
@@ -89,23 +83,9 @@ contract Users {
         return user.totalRating / user.numberOfRatings;
     }
 
-    function getNumberOfRatings(address userAddress) public view returns (uint256) {
-        require(registeredUsers[userAddress] == true, "User not registered");
+    function getNumberOfRatings(address userAddress, address caller) public view returns (uint256) {
+        require(registeredUsers[caller] == true, "Function caller not registered");
         return users[userAddress].numberOfRatings;
     }
-
-    function checkBalance() public view  returns (uint256) {
-        uint256 balance =  userBalances[msg.sender];
-        return balance;
-    }
-
-    function transferMoney(uint amount, address _to) public returns(bool) {
-        require(userBalances[msg.sender] > amount, "not enough money in balance to transfer");
-        userBalances[msg.sender] -= amount;
-        userBalances[_to] += amount;
-
-        return true;
-    }
-
     
 }

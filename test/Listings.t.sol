@@ -28,7 +28,7 @@ contract ListingsTest is Test {
         vm.startPrank(testSeller);
         usersContract.registerUser("seller", "password");
         vm.stopPrank();
-    }
+    }   
 
     function test_itemTransfer() public {
         vm.startPrank(testSeller);

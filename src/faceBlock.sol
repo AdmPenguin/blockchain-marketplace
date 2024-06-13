@@ -3,11 +3,12 @@
 
 pragma solidity ^0.8.13;
 
+import "./ReentrancyGuard.sol";
 import { Users } from "../src/Users.sol";
 import { Items } from "../src/Items.sol";
 import { Listings } from "../src/Listings.sol";
 
-contract MarketPlace {
+contract MarketPlace is ReentrancyGuard{
 
     Items private itemManager;
     Users private userManager;
@@ -41,6 +42,6 @@ contract MarketPlace {
         loggedIn[msg.sender] == false;
     }
 
-    function createListing(string calldata itemName, string calldata listingName)
+    
 
 }
