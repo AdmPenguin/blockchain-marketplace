@@ -32,8 +32,6 @@ contract Listings {
     uint public nextListingId = 0;
     uint public numberOfOpenListings = 0;
 
-    Listing[] private listings;
-
     mapping(uint256 => Listing) private idToListing;
 
 
@@ -42,9 +40,10 @@ contract Listings {
     constructor(Items _itemManager, Users _userManager) {
         itemManager = _itemManager;
         userManager = _userManager;
+        userManager.registerUser("Amazon", "Bezos", address(this));
     }
 
-    function createListing(uint256 _minPrice, string calldata name, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location, address caller) public{
+    function createListing(uint _minPrice, string calldata name, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location, address caller) public returns(uint){
         //restrict bidding duration so that people cannot create listings that can last forever(keeps people from causing buyers money to be locked up indefinitely)
         require(biddingDurationDays >= 1, "Listings must be up for at least 1 day");
         require(biddingDurationDays < 30, "Max Bidding Duration is 30 Days");
@@ -65,9 +64,13 @@ contract Listings {
             endOfBidding: block.timestamp + biddingDurationDays*86400 // 1 day is 86400 sec
         });
 
+        idToListing[nextListingId] = listing;
         nextListingId++;
-        listings.push(listing);
+        
+        
         numberOfOpenListings++;
+
+        return listing.listingId;
     }
 
 
@@ -79,7 +82,7 @@ contract Listings {
 
         //Listing must be for sale to purchase, and bid must be higher than previous maximum bid
         Listing memory listingToBuy = idToListing[listingId];
-        require(listingToBuy.forSale, "Listing not for sale");
+        require(listingToBuy.forSale == true, "Listing not for sale");
         require(msg.value > listingToBuy.minPrice, "Bid lower than minimum price needed to be top bidder");
 
         // Bids can only be made before end of bidding
@@ -185,7 +188,7 @@ contract Listings {
         
         uint[25] memory openListingIds;
         uint openListingCounter = 0;
-        for (uint i = 0; i < listings.length && openListingCounter < 25; i++){
+        for (uint i = 0; i <  nextListingId && openListingCounter < 25; i++){
             if(idToListing[i].forSale == true){
                 openListingIds[openListingCounter] = idToListing[i].listingId;
             }
