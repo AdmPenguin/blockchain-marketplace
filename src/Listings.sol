@@ -178,6 +178,20 @@ contract Listings {
 
         return openListingIds;
     }
+    //returns highest bid on a listing
+    function getMinPriceForListing(uint listingId) public view returns(uint){
+        require(listingId < nextListingId, "Listing does not exitst");
+        return idToListing[listingId].minPrice;
+    }
 
+    //returns seconds left before bidding ends - front end can change to days, hours, etc 
+    //returns 0 if bidding has ended
+    function getSecondsBeforeBiddingEndsForListing(uint listingId) public view returns(uint){
+        require(listingId < nextListingId, "Listing does not exitst");
+        if(block.timestamp > idToListing[listingId].endOfBidding){
+            return 0;
+        }
 
+        return idToListing[listingId].endOfBidding - block.timestamp;
+    }
 }
