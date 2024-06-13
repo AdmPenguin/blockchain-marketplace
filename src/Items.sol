@@ -27,21 +27,21 @@ contract Items {
         userManager = _userManager;
     }
 
-    function createItem(string memory _name) public returns(uint){
-        require(userManager.registeredUsers(msg.sender), "User not registered");
-        Item memory newItem = Item(nextItemId, msg.sender, _name);
+    function createItem(string memory _name, address caller) public returns(uint){
+        require(userManager.registeredUsers(caller), "User not registered");
+        Item memory newItem = Item(nextItemId, caller, _name);
         items.push(newItem);
-        emit ItemCreated(nextItemId, msg.sender, _name);
+        emit ItemCreated(nextItemId, caller, _name);
         nextItemId++;
 
         return newItem.id;
     }
 
-    function transferItem(uint _itemId, address _to) public returns(bool){
+    function transferItem(uint _itemId, address _to, address caller) public returns(bool){
         require(userManager.registeredUsers(_to), "Recipient not registered");
-        require(items[_itemId].owner == msg.sender, "Not the item owner");
+        require(items[_itemId].owner == caller, "Not the item owner");
         items[_itemId].owner = _to;
-        emit ItemTransferred(_itemId, msg.sender, _to);
+        emit ItemTransferred(_itemId, caller, _to);
         return true;
     }
 
