@@ -18,11 +18,11 @@ contract Listings {
         
         bool forSale;        
         uint256 minPrice;
-
         address seller;
         address highestBidder;
         uint endOfBidding;
 
+        // if is not shippable, location is where it is sold from. if is, where shipping from
         bool isShippable;
         string location;
 
@@ -34,7 +34,11 @@ contract Listings {
 
     Listing[] private listings;
 
-    mapping(uint256 => Listing) private idToListing;
+    Listing[] listings;
+    AuctionListing[] auctionListings;
+
+
+    mapping(address => bool) private paymentLock; // locks paying to prevent reentrancy attacks
 
 
     mapping(uint => mapping(address => uint)) private listingIdToOwedBalances;
@@ -69,12 +73,33 @@ contract Listings {
         listings.push(listing);
         numberOfOpenListings++;
 
-        return true;
+
+    // creates a new auction listing with the following parameters
+    function createAuctionListing(uint256 startingPrice, string calldata name, bool isShippable, string calldata location) public {
+        AuctionListing memory listing = AuctionListing({
+            id: auctionListings.length,
+            price: startingPrice,
+            seller: msg.sender,
+            name: name,
+            currWinner: address(0x00),
+            isActive: true,
+            isShippable: isShippable,
+            location: location
+        });
+        auctionListings.push(listing);
     }
+
+    // allows seller to end their auction and collect payment
+    // returns true if successful, false if not
+    function endAuction(uint256 id) public{
+        if(id >= auctionListings.length){
+            revert("Invalid ID");
+        }
 
 
     function bidOnListing(uint listingId, address caller) external payable{
         require(listingId < nextListingId, "Listing does not exitst");
+
 
         // prevent seller from bidding on their own listing
         require(idToListing[listingId].seller != caller, "seller cannot bid on their own product");
