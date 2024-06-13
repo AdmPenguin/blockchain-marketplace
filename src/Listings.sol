@@ -17,11 +17,11 @@ contract Listings {
         string name;
         uint itemId;
         bool forSale;
+
         // if is not shippable, location is where it is sold from. if is, where shipping from
         // can be 'N/A'
         bool isShippable;
         string location;
-
     }
 
     // Auction Listing (only one in stock)
@@ -29,9 +29,11 @@ contract Listings {
         uint256 listingId;
         uint itemId;
         uint256 price;
+        string name;
         address seller;
         address currWinner;
         bool openForBidding;
+
 
         // if is not shippable, location is where it is sold from. if is, where shipping from
         bool isShippable;
@@ -44,7 +46,11 @@ contract Listings {
     Listing[] private listings;
     AuctionListing[] private auctionListing;
 
-    mapping(uint256 => Listing) private idToListing;
+    Listing[] listings;
+    AuctionListing[] auctionListings;
+
+
+    mapping(address => bool) private paymentLock; // locks paying to prevent reentrancy attacks
 
     constructor(Items _itemManager, Users _userManager) {
         itemManager = _itemManager;
@@ -66,11 +72,41 @@ contract Listings {
 
         nextListingId++;
         listings.push(listing);
-
-        return true;
     }
 
+    // creates a new auction listing with the following parameters
+    function createAuctionListing(uint256 startingPrice, string calldata name, bool isShippable, string calldata location) public {
+        AuctionListing memory listing = AuctionListing({
+            id: auctionListings.length,
+            price: startingPrice,
+            seller: msg.sender,
+            name: name,
+            currWinner: address(0x00),
+            isActive: true,
+            isShippable: isShippable,
+            location: location
+        });
+        auctionListings.push(listing);
+    }
 
+    // allows seller to end their auction and collect payment
+    // returns true if successful, false if not
+    function endAuction(uint256 id) public{
+        if(id >= auctionListings.length){
+            revert("Invalid ID");
+        }
+
+        AuctionListing memory listing = auctionListings[id];
+
+        if(listing.isActive == true){
+            auctionListings[id].isActive = false;
+            msg.sender.call{value: listing.price}("");
+        }
+        else {
+            revert("Only the seller can end the auction.");
+        }
+
+    }
 
     // takes in a listing id, and attempts to buy it with the current user balance
     // returns true if successful, false otherwise (e.g. balance too low)
