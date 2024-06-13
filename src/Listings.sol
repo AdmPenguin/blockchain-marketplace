@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// import { Users } from "../src/Users.sol";
-// import { Wallet } from "../src/Wallet.sol";
+import { Users } from "../src/Users.sol";
+import { Items } from "../src/Items.sol";
 
 contract Listings {
+
+    Items private itemManager;
+    Users private userManager;
+
     // Standard listing (stocked, single price)
     struct Listing {
-        uint256 id;
+        uint256 listingId;
         uint256 price;
         address seller;
         string name;
-        uint40 stockRemaining;
-        bool activeListing;
+        uint itemId;
+        bool forSale;
 
         // if is not shippable, location is where it is sold from. if is, where shipping from
         // can be 'N/A'
@@ -22,43 +26,51 @@ contract Listings {
 
     // Auction Listing (only one in stock)
     struct AuctionListing {
-        uint256 id;
+        uint256 listingId;
+        uint itemId;
         uint256 price;
         string name;
         address seller;
         address currWinner;
-        bool isActive;
+        bool openForBidding;
+
 
         // if is not shippable, location is where it is sold from. if is, where shipping from
         bool isShippable;
         string location;
     }
 
+    uint public nextListingId = 0;
+    uint public nextAuctionListingId = 0;
+
+    Listing[] private listings;
+    AuctionListing[] private auctionListing;
+
     Listing[] listings;
     AuctionListing[] auctionListings;
 
+
     mapping(address => bool) private paymentLock; // locks paying to prevent reentrancy attacks
 
-    // this is a test function
-    // when users is added, will be set there instead
-    function setPaymentLock(address addressToSet) public {
-        if(msg.sender == address(0x69)){
-            paymentLock[addressToSet] = false;
-        }
+    constructor(Items _itemManager, Users _userManager) {
+        itemManager = _itemManager;
+        userManager = _userManager;
     }
 
-    // creates a new listing with the following parameters
-    function createListing(uint256 amount, string calldata name, uint40 stockRemaining, bool isShippable, string calldata location) public {
+    function createListing(uint256 _price, string calldata name, uint _itemId, bool isShippable, string calldata location) public returns (bool){
+        itemManager.transferItem(_itemId, address(this));
         Listing memory listing = Listing({
-            id: listings.length,
-            price: amount,
+            listingId: nextListingId, 
+            price: _price,
             seller: msg.sender,
             name: name,
-            stockRemaining: stockRemaining,
-            activeListing: true,
+            itemId: _itemId,
+            forSale: true,
             isShippable: isShippable,
             location: location
         });
+
+        nextListingId++;
         listings.push(listing);
     }
 
@@ -96,100 +108,48 @@ contract Listings {
 
     }
 
-    // takes in  a listing id and amount, and sets the amount on that listing to be the same
-    function restockListing(uint256 id, uint40 amount) public {
-        if(id >= listings.length){
-            revert("Invalid ID");
-        }
-
-        Listing memory listing = listings[id];
-
-        if(msg.sender == listing.seller){
-            listings[id].stockRemaining = amount;
-        }
-        else {
-            revert("Only the seller can change stock.");
-        }
-    }
-
     // takes in a listing id, and attempts to buy it with the current user balance
     // returns true if successful, false otherwise (e.g. balance too low)
-    function buyListing(uint256 id) payable public returns (bool){
-        if(id >= listings.length){
-            return false;
-        }
+    function buyListing(uint256 listingId) public returns (bool){
+        Listing memory listingToBuy = idToListing[listingId];
+        require(listingToBuy.forSale, "Listing not for sale");
+        require(userManager.transferMoney(listingToBuy.price, listingToBuy.seller), "Transaction failed");
 
-        Listing storage listingToBuy = listings[id];
-
-        if(listingToBuy.stockRemaining <= 0){
-            msg.sender.call{value: msg.value}("");
-            return false;
-        }
-
-        if(msg.value == listingToBuy.price){
-            if(paymentLock[listingToBuy.seller] == false){
-                paymentLock[listingToBuy.seller] = true;
-
-                listingToBuy.seller.call{value: msg.value}("");
-                listingToBuy.stockRemaining--;
-
-                paymentLock[listingToBuy.seller] = false;
-
-                return true;
-            }
-            else {
-                msg.sender.call{value: msg.value}("");
-                return false;
-            }
-        }
-        else {
-            msg.sender.call{value: msg.value}("");
-            return false;
-        }
+        idToListing[listingId].forSale = false;
+        itemManager.transferItem(listingToBuy.itemId, msg.sender);
+        return true;     
     }
 
     // takes in a listing id, and attempts to place a bid with the current user balance
     // returns true if successful, false otherwise (e.g. balance too low)
-    function placeBid(uint256 id) payable public returns (bool){
-        if(id >= auctionListings.length){
-            return false;
-        }
+    // function placeBid(uint256 listingId, uint256 amount) public returns (bool){
+    //     AuctionListing memory listingToBid = idToListing[listingId];
 
-        AuctionListing storage listingToBid = auctionListings[id];
-        
-        if(listingToBid.isActive == false){
-            msg.sender.call{value: msg.value}("");
-            return false;
-        }
+    //     if(amount > listingToBid.price){
+    //         listingToBid.price = amount;
+    //         listingToBid.currWinner = msg.sender;
+    //         return true;
+    //     }
+    //     else {
+    //         return false;
+    //     }
 
-        if(msg.value > listingToBid.price){
-            // return money from previous winner
-            if(paymentLock[listingToBid.currWinner] == false){
-                paymentLock[listingToBid.currWinner] = true;
-                listingToBid.currWinner.call{value: listingToBid.price}("");
-                paymentLock[listingToBid.currWinner] = false;
-            }
+    // }
 
-            // set new winning bid
-            listingToBid.currWinner = msg.sender;
-            listingToBid.price = msg.value;
-            return true;
-        }
-        else {
-            msg.sender.call{value: msg.value}("");
-            return false;
-        }
+    // // takes in string regex and returns an array of listings with the same name
+    // function getListings(string calldata regex) public returns(Listing[] memory){
+    //     Listing[] memory listings;
 
-    }
+    //     return listings;
 
-    // takes in string regex and returns an array of listings with the same name
-    function getListings() view public returns(Listing[] memory){
-        return listings;
-    }
+    // }
 
-    // takes in string regex and returns an array of auction listings with the same name
-    function getAuctionListings() view public returns(AuctionListing[] memory){
-        return auctionListings;
-    }
+    // // takes in string regex and returns an array of auction listings with the same name
+    // function getAuctionListings(string calldata regex) public returns(AuctionListing[] memory){
+    //     AuctionListing[] memory listings;
+
+    //     return listings;
+
+    // }
 
 }
