@@ -17,6 +17,7 @@ contract MarketPlace{
         userManager = new Users();
         itemManager = new Items(userManager);
         listingsManager = new Listings(itemManager, userManager);
+        userManager.registerUser("MarketContracts", "Zuckerberg", address(this));
     }
 
     
@@ -24,7 +25,7 @@ contract MarketPlace{
 
     //use for functions that require users to be logged in to call
     modifier loginNecessary(){
-        require(loggedIn[msg.sender] == true, "must be logged in to use this function");
+        require(loggedIn[msg.sender] == true, "Must be logged in to use this function");
         _;
     }
 
@@ -44,8 +45,8 @@ contract MarketPlace{
 
     // creates a virtual representation of an item that they would like to put on the marketplace
         //ideally users would have to submit a unique identifier of the item to prove it exists and is not already created but this is not implemented here
-    function createItem(string memory _name) public loginNecessary(){
-        itemManager.createItem(_name, msg.sender);
+    function createItem(string memory _name) public loginNecessary() returns(uint){
+        return itemManager.createItem(_name, msg.sender);
     }
 
     function getLast25OpenListings() public view loginNecessary() returns(uint[25] memory){
@@ -56,15 +57,14 @@ contract MarketPlace{
         return itemManager.getItemOwner(itemId);
     }
     
-    function createListing(string calldata name, uint256 _minPrice, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location)public loginNecessary(){
-        listingsManager.createListing(_minPrice, name, _itemId, biddingDurationDays, isShippable, location, msg.sender);
+    function createListing(string calldata name, uint256 _minPrice, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location)public loginNecessary() returns(uint){
+        return listingsManager.createListing(_minPrice, name, _itemId, biddingDurationDays, isShippable, location, msg.sender);
     }
 
     //returns true if bid was successful and reverts otherwise
         //if bid fails money is returned to user
     function bidOnListing(uint listingId) external payable loginNecessary() returns(bool){
-        (bool success, ) = address(listingsManager).call{value: msg.value}(abi.encodeWithSignature("bidOnListing(uint256,address)", listingId, msg.sender));
-        require(success, "Bid Failed");
+        listingsManager.bidOnListing{value: msg.value}(listingId, msg.sender);
         return true;
     }
 
