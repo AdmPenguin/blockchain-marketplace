@@ -31,6 +31,8 @@ contract Listings {
 
     uint public nextListingId = 0;
     uint public numberOfOpenListings = 0;
+
+    bool private locked;
     
     mapping(uint256 => Listing) private idToListing;
 
@@ -72,15 +74,6 @@ contract Listings {
         return listing.listingId;
     }
 
-    // allows seller to end their auction and collect payment
-    // returns true if successful, false if not
-    function endAuction(uint256 id) public{
-        if(id >= auctionListings.length){
-            revert("Invalid ID");
-        }
-    }
-
-
     function bidOnListing(uint listingId, address caller) external payable returns(bool){
         require(listingId < nextListingId, "Listing does not exitst");
 
@@ -120,7 +113,15 @@ contract Listings {
         return true;
     }
 
-    function sellerEndBidding(uint listingId, address caller) public{
+    modifier nonReentrant() {
+        require(!locked, "No reentrancy");
+
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    function sellerEndBidding(uint listingId, address caller) public nonReentrant {
         require(listingId < nextListingId, "Listing does not exitst");
         // enables seller to end bidding early if they want to accept the current highest offer
         require(caller == idToListing[listingId].seller, "Only seller can end bidding before the end of bidding duration");
@@ -219,13 +220,6 @@ contract Listings {
         }
 
         return idToListing[listingId].endOfBidding - block.timestamp;
-    }
-    
-   
-OfListingSeller(uint listingId) public view returns(uint){
-        require(listingId < nextListingId, "Listing does not exitst");
-        Listing memory listing = idToListing[listingId];
-        return userManager.getAverageRating(listing.seller);
     }
 
     function getNumberOfRatingOfListingSeller(uint listingId) public view returns(uint){
