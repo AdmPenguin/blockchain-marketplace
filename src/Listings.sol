@@ -33,12 +33,10 @@ contract Listings {
     uint public numberOfOpenListings = 0;
 
     Listing[] private listings;
-
-    Listing[] listings;
-    AuctionListing[] auctionListings;
+    Listing[] private auctionListings;
 
 
-    mapping(address => bool) private paymentLock; // locks paying to prevent reentrancy attacks
+    mapping(uint => Listing) private idToListing;
 
 
     mapping(uint => mapping(address => uint)) private listingIdToOwedBalances;
@@ -48,7 +46,7 @@ contract Listings {
         userManager = _userManager;
     }
 
-    function createListing(uint256 _minPrice, string calldata name, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location, address caller) public returns (bool){
+    function createListing(uint256 _minPrice, string calldata name, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location, address caller) public{
         //restrict bidding duration so that people cannot create listings that can last forever(keeps people from causing buyers money to be locked up indefinitely)
         require(biddingDurationDays >= 1, "Listings must be up for at least 1 day");
         require(biddingDurationDays < 30, "Max Bidding Duration is 30 Days");
@@ -72,21 +70,6 @@ contract Listings {
         nextListingId++;
         listings.push(listing);
         numberOfOpenListings++;
-
-
-    // creates a new auction listing with the following parameters
-    function createAuctionListing(uint256 startingPrice, string calldata name, bool isShippable, string calldata location) public {
-        AuctionListing memory listing = AuctionListing({
-            id: auctionListings.length,
-            price: startingPrice,
-            seller: msg.sender,
-            name: name,
-            currWinner: address(0x00),
-            isActive: true,
-            isShippable: isShippable,
-            location: location
-        });
-        auctionListings.push(listing);
     }
 
     // allows seller to end their auction and collect payment
@@ -95,9 +78,10 @@ contract Listings {
         if(id >= auctionListings.length){
             revert("Invalid ID");
         }
+    }
 
 
-    function bidOnListing(uint listingId, address caller) external payable{
+    function bidOnListing(uint listingId, address caller) external payable returns(bool){
         require(listingId < nextListingId, "Listing does not exitst");
 
 
@@ -132,6 +116,8 @@ contract Listings {
         // new min price represents highest bid, bidder becomes new highest bidder
         idToListing[listingId].minPrice = msg.value;
         idToListing[listingId].highestBidder = caller;
+
+        return true;
     }
 
     function sellerEndBidding(uint listingId, address caller) public{
@@ -234,11 +220,18 @@ contract Listings {
 
         return idToListing[listingId].endOfBidding - block.timestamp;
     }
-
-    function getRatingOfListingSeller(uint listingId) public view returns(uint){
+    
+   
+OfListingSeller(uint listingId) public view returns(uint){
         require(listingId < nextListingId, "Listing does not exitst");
         Listing memory listing = idToListing[listingId];
         return userManager.getAverageRating(listing.seller);
+    }
+
+    function getNumberOfRatingOfListingSeller(uint listingId) public view returns(uint){
+        require(listingId < nextListingId, "Listing does not exitst");
+        Listing memory listing = idToListing[listingId];
+        return userManager.getNumberOfRatings(listing.seller);
     }
 
 }

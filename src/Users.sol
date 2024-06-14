@@ -60,12 +60,12 @@ contract Users {
     }
 
 
-    function getUsername(address caller) public view returns (string memory) {
-        require(registeredUsers[caller] == true, "User not registered");
-        return users[caller].username;
+    function getUsername(address addressOfUser) public view returns (string memory) {
+        require(registeredUsers[addressOfUser] == true, "User not registered");
+        return users[addressOfUser].username;
     }
     
-    function submitRating(address userAddress, uint256 rating, address caller) public {
+    function submitRating(address userAddress, uint rating, address caller) public {
         require(rating >= 0 && rating <= 5, "Rating must be between 0 and 5 stars");
         require(registeredUsers[caller] == true, "Function caller not registered");
         require(caller != userAddress, "Users cannot rate themselves");

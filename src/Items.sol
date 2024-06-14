@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Users} from "../src/Users.sol";
 
-
+// Faceblock does not keep track of item ownership, that is why we encourage users to use a third party contract or create their own to track what Items they own
 contract Items {
 
     Users public userManager;
@@ -18,7 +18,6 @@ contract Items {
 
     uint public nextItemId = 0;
 
-    
 
     event ItemCreated(uint itemId, address owner, string name);
     event ItemTransferred(uint itemId, address from, address to);
@@ -45,9 +44,9 @@ contract Items {
         return true;
     }
 
-    function getItemOwner(uint _itemId) public view returns(address){
+    function getItemOwner(uint _itemId) public view returns(string memory){
         require(_itemId < nextItemId, "Item does not exists");
-        return items[_itemId].owner;
+        return userManager.getUsername(items[_itemId].owner);
     }
 
 }
