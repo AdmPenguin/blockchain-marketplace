@@ -220,8 +220,9 @@ contract Listings {
 
         return idToListing[listingId].endOfBidding - block.timestamp;
     }
-
-    function getRatingOfListingSeller(uint listingId) public view returns(uint){
+    
+   
+OfListingSeller(uint listingId) public view returns(uint){
         require(listingId < nextListingId, "Listing does not exitst");
         Listing memory listing = idToListing[listingId];
         return userManager.getAverageRating(listing.seller);
