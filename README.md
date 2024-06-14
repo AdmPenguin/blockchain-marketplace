@@ -1,5 +1,6 @@
 # FaceBlock Marketplace
 ### By Alexander Thomas, Amgad Hawari, Bao Tran
+An eth-based marketplace backend
 
 ## Introduction
 FaceBlock Marketplace is a peer-to-peer etherium based marketplace smart contract designed to serve as a backend to manage users, items, listings, and auctions.
