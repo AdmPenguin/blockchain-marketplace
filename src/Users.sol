@@ -74,8 +74,8 @@ contract Users {
         users[userAddress].numberOfRatings++;
     }
 
-    function getAverageRating(address userAddress, address caller) public view returns (uint256) {
-        require(registeredUsers[caller] == true, "Function caller not registered");
+    function getAverageRating(address userAddress) public view returns (uint256) {
+        require(registeredUsers[userAddress] == true, "Function caller not registered");
         User memory user = users[userAddress];
         if (user.numberOfRatings == 0) {
             return 0; // No ratings yet, return 0
@@ -83,8 +83,8 @@ contract Users {
         return user.totalRating / user.numberOfRatings;
     }
 
-    function getNumberOfRatings(address userAddress, address caller) public view returns (uint256) {
-        require(registeredUsers[caller] == true, "Function caller not registered");
+    function getNumberOfRatings(address userAddress) public view returns (uint256) {
+        require(registeredUsers[userAddress] == true, "Function caller not registered");
         return users[userAddress].numberOfRatings;
     }
     

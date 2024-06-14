@@ -187,6 +187,21 @@ contract Listings {
 
     }
 
+    function rateSellerOfListingYouWon(uint listingId, uint rating, address caller)  public {
+        require(listingId < nextListingId, "Listing does not exitst");
+        
+        Listing memory listingToRate = idToListing[listingId];
+        require(listingToRate.forSale == false, "Cannot rate a seller based on a listing before a listing is finalized");
+        require(listingToRate.highestBidder == caller, "Must be the winner of the listing to rate seller");
+        require(listingToRate.highestBidder != listingToRate.seller, "Sellers cannot rate themselves");
+
+        userManager.submitRating(listingToRate.seller, rating, caller);
+
+        //this is so once a seller has been rating for a particular listing no one can rate him again
+        idToListing[listingId].highestBidder = address(0);
+        
+    }
+
 // functions to get listing information
 
     // Solidity doesn't allow for dynamic arrays in function calls, this is work around however the number of open listings you can get has to be constant
@@ -203,6 +218,27 @@ contract Listings {
 
         return openListingIds;
     }
+    //returns highest bid on a listing
+    function getMinPriceForListing(uint listingId) public view returns(uint){
+        require(listingId < nextListingId, "Listing does not exitst");
+        return idToListing[listingId].minPrice;
+    }
 
+    //returns seconds left before bidding ends - front end can change to days, hours, etc 
+    //returns 0 if bidding has ended
+    function getSecondsBeforeBiddingEndsForListing(uint listingId) public view returns(uint){
+        require(listingId < nextListingId, "Listing does not exitst");
+        if(block.timestamp > idToListing[listingId].endOfBidding){
+            return 0;
+        }
+
+        return idToListing[listingId].endOfBidding - block.timestamp;
+    }
+
+    function getRatingOfListingSeller(uint listingId) public view returns(uint){
+        require(listingId < nextListingId, "Listing does not exitst");
+        Listing memory listing = idToListing[listingId];
+        return userManager.getAverageRating(listing.seller);
+    }
 
 }
