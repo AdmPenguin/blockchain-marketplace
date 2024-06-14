@@ -12,22 +12,20 @@ contract Listings {
     // Standard listing (stocked, single price)
     
     struct Listing {
-        string name;
-        uint256 listingId;
-        uint itemId;
+        string name; // listing's name
+        uint256 listingId; // unique id which identifies this listing
+        uint itemId; // id of the item being sold
         
-        bool forSale;        
-        uint256 minPrice;
-        address seller;
-        address highestBidder;
-        uint endOfBidding;
+        bool forSale; // whether auction is still active
+        uint256 minPrice; // current minimum price which will be accepted
+        address seller; // address of the seller of the item
+        address highestBidder; // current auction winner
+        uint endOfBidding; // the duration of the auction
 
-        // if is not shippable, location is where it is sold from. if is, where shipping from
-        bool isShippable;
-        string location;
+        bool isShippable; // if the seller can ship the item to the buyer
+        string location; // if is not shippable, location is where it is sold from. if is, where shipping from
 
     }
-
 
     uint public nextListingId = 0;
     uint public numberOfOpenListings = 0;
@@ -42,6 +40,14 @@ contract Listings {
         itemManager = _itemManager;
         userManager = _userManager;
         userManager.registerUser("Amazon", "Bezos", address(this));
+    }
+
+    modifier nonReentrant() {
+        require(!locked, "No reentrancy");
+
+        locked = true;
+        _;
+        locked = false;
     }
 
     function createListing(uint _minPrice, string calldata name, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location, address caller) public returns(uint){
@@ -74,7 +80,7 @@ contract Listings {
         return listing.listingId;
     }
 
-    function bidOnListing(uint listingId, address caller) external payable returns(bool){
+    function bidOnListing(uint listingId, address caller) external payable nonReentrant returns(bool) {
         require(listingId < nextListingId, "Listing does not exitst");
 
 
@@ -113,13 +119,6 @@ contract Listings {
         return true;
     }
 
-    modifier nonReentrant() {
-        require(!locked, "No reentrancy");
-
-        locked = true;
-        _;
-        locked = false;
-    }
 
     function sellerEndBidding(uint listingId, address caller) public nonReentrant {
         require(listingId < nextListingId, "Listing does not exitst");
@@ -149,7 +148,7 @@ contract Listings {
 
     //allow the highest bidder to end bidding and claim their item if the seller hasn't ended the bidding by the end of the bidding duration
         //prevents bidders from not ending the bidding and keeping the highest bidders eth locked up in the contract
-    function highestBidderEndBiddingPostBiddingPeriod(uint listingId, address caller) public {
+    function highestBidderEndBiddingPostBiddingPeriod(uint listingId, address caller) public  nonReentrant {
         require(listingId < nextListingId, "Listing does not exitst");
         Listing memory listingToEnd =  idToListing[listingId];
         require(listingToEnd.highestBidder == caller, "Only the highest bidder can end the listing using this function");

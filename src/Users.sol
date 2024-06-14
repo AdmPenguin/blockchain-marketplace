@@ -17,7 +17,6 @@ contract Users {
     // used to check if users are registered
     mapping(address => bool) public registeredUsers;
 
-
     // Mapping to store users by their address
     mapping(address => User) private users;
 
