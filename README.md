@@ -8,6 +8,16 @@ FaceBlock Marketplace is a peer-to-peer etherium based marketplace smart contrac
 ## Running
 FaceBlock Marketplace is designed to be a backend, and therefore should be imported into another smart contract which handles UI and user input. It, by itself, cannot faciliate user interaction.
 
+# For Users
+
+## Buyers
+Create Account > Check Listings > Bid On Listing > If won, you have the item on chain
+
+## Sellers
+Create Account > Create Item > Create Listing > End auction > Ship / Hand Item to winner in person
+
+# For Developers
+
 ## Subcontracts & Functions
 
 ### Users
@@ -56,5 +66,4 @@ The faceBlock contract ties the other three contracts together and allows for in
 - getSecondsBeforeBiddingEndsForListing: Calls the Listings function of the same name
 - getRatingOfListingSeller: Calls the Listings function of the same name
 - getNumberOfRatingOfListingSeller: Calls the Listings function of the same name
-
 
