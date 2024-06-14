@@ -18,11 +18,11 @@ contract Listings {
         
         bool forSale;        
         uint256 minPrice;
-
         address seller;
         address highestBidder;
         uint endOfBidding;
 
+        // if is not shippable, location is where it is sold from. if is, where shipping from
         bool isShippable;
         string location;
 
@@ -31,9 +31,8 @@ contract Listings {
 
     uint public nextListingId = 0;
     uint public numberOfOpenListings = 0;
-
+    
     mapping(uint256 => Listing) private idToListing;
-
 
     mapping(uint => mapping(address => uint)) private listingIdToOwedBalances;
 
@@ -73,9 +72,18 @@ contract Listings {
         return listing.listingId;
     }
 
+    // allows seller to end their auction and collect payment
+    // returns true if successful, false if not
+    function endAuction(uint256 id) public{
+        if(id >= auctionListings.length){
+            revert("Invalid ID");
+        }
+    }
+
 
     function bidOnListing(uint listingId, address caller) external payable returns(bool){
         require(listingId < nextListingId, "Listing does not exitst");
+
 
         // prevent seller from bidding on their own listing
         require(idToListing[listingId].seller != caller, "seller cannot bid on their own product");
@@ -212,8 +220,9 @@ contract Listings {
 
         return idToListing[listingId].endOfBidding - block.timestamp;
     }
-
-    function getRatingOfListingSeller(uint listingId) public view returns(uint){
+    
+   
+OfListingSeller(uint listingId) public view returns(uint){
         require(listingId < nextListingId, "Listing does not exitst");
         Listing memory listing = idToListing[listingId];
         return userManager.getAverageRating(listing.seller);
