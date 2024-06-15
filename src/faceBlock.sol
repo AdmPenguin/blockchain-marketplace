@@ -88,10 +88,6 @@ contract MarketPlace{
         return listingsManager.getSecondsBeforeBiddingEndsForListing(listingId);
     }
 
-    function getRatingOfListingSeller(uint listingId) public view returns(uint){
-        return listingsManager.getRatingOfListingSeller(listingId);
-    }
-
     function getNumberOfRatingOfListingSeller(uint listingId) public view returns(uint){
         return listingsManager.getNumberOfRatingOfListingSeller(listingId);
     }
