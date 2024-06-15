@@ -49,6 +49,10 @@ contract MarketPlace{
         return itemManager.createItem(_name, msg.sender);
     }
 
+    function transferItem(uint itemId, address _to) public {
+        itemManager.transferItem(itemId, _to, msg.sender);
+    }
+
     function getLast25OpenListings() public view loginNecessary() returns(uint[25] memory){
         return listingsManager.getLast25OpenListings();
     }

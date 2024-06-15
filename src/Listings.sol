@@ -51,6 +51,7 @@ contract Listings {
     }
 
     function createListing(uint _minPrice, string calldata name, uint _itemId, uint40  biddingDurationDays, bool isShippable, string calldata location, address caller) public returns(uint){
+        require(keccak256(bytes(userManager.getUsername(caller))) == keccak256(bytes(itemManager.getItemOwner(_itemId))), "Not the item owner");
         //restrict bidding duration so that people cannot create listings that can last forever(keeps people from causing buyers money to be locked up indefinitely)
         require(biddingDurationDays >= 1, "Listings must be up for at least 1 day");
         require(biddingDurationDays < 30, "Max Bidding Duration is 30 Days");

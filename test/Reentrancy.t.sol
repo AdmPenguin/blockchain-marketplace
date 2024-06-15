@@ -7,62 +7,55 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import "forge-std/Vm.sol";
 
-import { Users } from "../src/Users.sol";
-import { Items } from "../src/Items.sol";
-import { Listings } from "../src/Listings.sol";
+import { MarketPlace } from "../src/faceBlock.sol";
 
-contract AttackerBid {
+contract Attacker {
+    MarketPlace public marketplace;
+    uint count;
 
-}
+    constructor(MarketPlace _marketPlace) {
+        marketplace = _marketPlace;
+        count = 0;
+    }
 
-contract AttackerSeller {
-
-}
-
-contract AttackerHighestBidder {
+    fallback() payable external {
+        if(count == 0){
+            console.log("TEST");
+            marketplace.endListingAsSeller(0);
+            count++;
+        }
+    }
 
 }
 
 contract ReentrancyTest is Test {
-    Users public users;
-    Items public items;
-    Listings public listings;
+    MarketPlace public marketplace;
 
-    address alice = address(0x01);
-    address attacker1Address;
-    address attacker2Address;
+    Attacker attacker;
 
     function setUp() public {
-        users = new Users();
-        items = new Items(users);
-        listings = new Listings(items, users);
+        marketplace = new MarketPlace();
+        attacker = new  Attacker(marketplace);
 
-        users.registerUser("alice", "password", alice);
-        items.createItem("Test Item", alice);
-        listings.createListing(0 ether, "Test Listing", 0, 1, false, "UCSB, CA", alice);
-    }
-
-    function testBidOnListing() public {
-        AttackerBid attacker1 = new AttackerBid();
-        AttackerBid attacker2 = new AttackerBid();
-
-        deal(attacker1Address, 100 ether);
-        deal(attacker2Address, 100 ether);
-
-        attacker1Address = address(attacker1);
-        attacker2Address = address(attacker2);
-
-        listings.bidOnListing{value: 1 ether}(0, attacker1Address);
-        listings.bidOnListing{value: 2 ether}(0, attacker1Address);
+        deal(address(marketplace), 100 ether);
+        deal(address(attacker), 1 ether);
+        
+        vm.startPrank(address(attacker));
+        marketplace.createAccount("alice", "password");
+        marketplace.login("alice", "password");
+        marketplace.createItem("Test Item");
+        marketplace.createListing("Test Listing", 1 ether, 0, 1, true, "Goleta, CA");
+        vm.stopPrank();
 
     }
 
     function testSellerEndListing() public {
+        vm.startPrank(address(attacker));
+        marketplace.endListingAsSeller(0);
+        vm.stopPrank();
 
+        assertEq(address(marketplace).balance, 100 ether);
     }
 
-    function highestBidderEndBiddingPostBiddingPeriod() public {
-
-    }
 
 }
